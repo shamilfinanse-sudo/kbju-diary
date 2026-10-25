@@ -11,7 +11,7 @@ export function createInitial(): AppData {
     entries: [],
     workouts: [],
     products: {},
-    settings: { theme: 'mint', claudeKey: '', customTargets: false },
+    settings: { theme: 'forest', claudeKey: '', customTargets: false },
   }
 }
 

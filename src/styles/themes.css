@@ -1,5 +1,4 @@
 /* Три вида: каждый задаёт только переменные, разметка общая. */
-:root,
 :root[data-look='mint'] {
   --bg: #b9cbc5;
   --deco: radial-gradient(60% 40% at 90% 8%, #dfc7a6 0%, transparent 70%), radial-gradient(70% 45% at 0% 35%, #8fb0a8 0%, transparent 70%),
@@ -51,6 +50,7 @@
   --border: 0 solid transparent;
 }
 
+:root,
 :root[data-look='forest'] {
   color-scheme: dark;
   --bg: #1d4a3c;
