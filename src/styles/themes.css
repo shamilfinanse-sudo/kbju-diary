@@ -1,0 +1,145 @@
+/* Три вида: каждый задаёт только переменные, разметка общая. */
+:root,
+:root[data-look='mint'] {
+  --bg: #b9cbc5;
+  --deco: radial-gradient(60% 40% at 90% 8%, #dfc7a6 0%, transparent 70%), radial-gradient(70% 45% at 0% 35%, #8fb0a8 0%, transparent 70%),
+    radial-gradient(80% 50% at 100% 85%, #9fbab3 0%, transparent 70%);
+  --surface: rgba(240, 243, 239, 0.93);
+  --surface-2: #e2e8e3;
+  --text: #2b3835;
+  --muted: #667a75;
+  --line: rgba(60, 85, 80, 0.12);
+  --accent: #d98f55;
+  --accent-ink: #fff;
+  --track: #d3dcd6;
+  --c-p: #5f9a94;
+  --c-f: #d98f55;
+  --c-c: #c4ae85;
+  --good: #6aa57f;
+  --warn: #d9a441;
+  --bad: #c86a5a;
+  --radius: 22px;
+  --shadow: 0 10px 28px rgba(55, 80, 74, 0.16);
+  --field-shadow: inset 0 1px 3px rgba(55, 80, 74, 0.16);
+  --btn-shadow: 0 4px 12px rgba(217, 143, 85, 0.35);
+  --tabbar: rgba(240, 243, 239, 0.9);
+  --border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+:root[data-look='neo'] {
+  --bg: #e4e7ed;
+  --deco: none;
+  --surface: #e4e7ed;
+  --surface-2: #e4e7ed;
+  --text: #2b2f38;
+  --muted: #8a90a0;
+  --line: rgba(120, 128, 150, 0.18);
+  --accent: #f2a33a;
+  --accent-ink: #fff;
+  --track: #d6dae3;
+  --c-p: #5b7bb0;
+  --c-f: #f2a33a;
+  --c-c: #6fb08a;
+  --good: #5fae7e;
+  --warn: #e0a83a;
+  --bad: #d0645a;
+  --radius: 20px;
+  --shadow: 8px 8px 18px #c5cad5, -8px -8px 18px #ffffff;
+  --field-shadow: inset 4px 4px 8px #c9ced9, inset -4px -4px 8px #ffffff;
+  --btn-shadow: 5px 5px 12px #c5cad5, -5px -5px 12px #ffffff;
+  --tabbar: #e4e7ed;
+  --border: 0 solid transparent;
+}
+
+:root[data-look='forest'] {
+  color-scheme: dark;
+  --bg: #1d4a3c;
+  --deco: radial-gradient(70% 38% at 100% 0%, #6b4a38 0%, transparent 70%), radial-gradient(80% 45% at 0% 50%, #2f6b53 0%, transparent 70%),
+    radial-gradient(90% 40% at 100% 100%, #5a3d2e 0%, transparent 72%);
+  --surface: rgba(255, 255, 255, 0.1);
+  --surface-2: rgba(0, 0, 0, 0.2);
+  --text: #f3ecda;
+  --muted: #b3c6b8;
+  --line: rgba(255, 255, 255, 0.14);
+  --accent: #e8c39e;
+  --accent-ink: #3b2a1b;
+  --track: rgba(0, 0, 0, 0.25);
+  --c-p: #a8d5a2;
+  --c-f: #e8c39e;
+  --c-c: #d38a5d;
+  --good: #8fcf9a;
+  --warn: #e8c15a;
+  --bad: #f08a78;
+  --radius: 24px;
+  --shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+  --field-shadow: none;
+  --btn-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+  --tabbar: rgba(24, 58, 47, 0.82);
+  --border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+:root[data-look='forest'] .card,
+:root[data-look='forest'] .sheet,
+:root[data-look='forest'] .tabbar {
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+}
+
+/* «Нео»: поля вдавлены, активные кнопки выпуклые */
+:root[data-look='neo'] .card {
+  border: none;
+}
+:root[data-look='neo'] .row,
+:root[data-look='neo'] .draft,
+:root[data-look='neo'] .option,
+:root[data-look='neo'] .theme-card {
+  box-shadow: var(--btn-shadow);
+  border: none;
+  background: var(--surface);
+}
+:root[data-look='neo'] .row {
+  margin: 6px 4px;
+  width: calc(100% - 8px);
+}
+:root[data-look='neo'] .seg {
+  box-shadow: var(--field-shadow);
+  background: var(--surface);
+}
+:root[data-look='neo'] .seg button.on,
+:root[data-look='neo'] .chip.on {
+  box-shadow: var(--btn-shadow);
+  background: var(--surface);
+  color: var(--accent);
+}
+:root[data-look='neo'] .chip {
+  box-shadow: var(--btn-shadow);
+  background: var(--surface);
+}
+:root[data-look='neo'] .btn {
+  box-shadow: var(--btn-shadow);
+}
+:root[data-look='neo'] .btn.primary {
+  background: var(--accent);
+}
+:root[data-look='neo'] .sheet {
+  background: var(--surface);
+}
+:root[data-look='neo'] .tabbar {
+  box-shadow: 0 -6px 16px rgba(197, 202, 213, 0.6);
+}
+:root[data-look='neo'] .fab {
+  box-shadow: var(--btn-shadow);
+}
+:root[data-look='neo'] .cal-d {
+  box-shadow: var(--btn-shadow);
+  background: var(--surface);
+}
+:root[data-look='neo'] .option.on,
+:root[data-look='neo'] .theme-card.on {
+  border: 2px solid var(--accent);
+}
+:root[data-look='forest'] .sheet {
+  background: #1d4639;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
