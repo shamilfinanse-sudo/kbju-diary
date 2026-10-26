@@ -92,3 +92,17 @@ export async function estimateWorkout(key: string, text: string, weightKg: numbe
   if (minutes === null || kcal === null || minutes <= 0) throw new ClaudeError('Не удалось разобрать ответ Claude.')
   return { name: typeof raw.name === 'string' && raw.name ? raw.name : text, minutes: Math.round(minutes), kcal: Math.round(kcal) }
 }
+
+/** Дешёвая проверка ключа: список моделей ничего не стоит. */
+export async function checkKey(key: string): Promise<void> {
+  let res: Response
+  try {
+    res = await fetch('https://api.anthropic.com/v1/models?limit=1', {
+      headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+    })
+  } catch {
+    throw new ClaudeError('Нет связи с Claude. Проверьте интернет.')
+  }
+  if (res.status === 401 || res.status === 403) throw new ClaudeError('Ключ не подошёл. Проверьте, что скопировали его целиком.')
+  if (!res.ok) throw new ClaudeError(`Claude ответил ошибкой ${res.status}.`)
+}

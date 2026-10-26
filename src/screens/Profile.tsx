@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { ConfirmButton } from '../components/ConfirmButton'
+import { checkKey, ClaudeError } from '../lib/claude'
 import { NumField } from '../components/NumField'
 import { createInitial, parseBackup, setProfile, setSettings, setTargets } from '../lib/data'
 import { demoData } from '../lib/demo'
@@ -21,6 +22,9 @@ export function Profile() {
   const targets = data.targets
   const [keyDraft, setKeyDraft] = useState(data.settings.claudeKey)
   const [message, setMessage] = useState('')
+  const [keyNote, setKeyNote] = useState<{ ok: boolean; text: string } | null>(null)
+  const [keyBusy, setKeyBusy] = useState(false)
+  const savedKey = data.settings.claudeKey
   const [pendingImport, setPendingImport] = useState<AppData | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -127,16 +131,54 @@ export function Profile() {
       <section className="card stack">
         <h3>Ключ Claude</h3>
         <div className="hint">Нужен для продуктов, которых нет в базе, и необычных тренировок. Хранится только в этом телефоне.</div>
-        <input type="password" autoComplete="off" placeholder="sk-ant-…" value={keyDraft} onChange={(e) => setKeyDraft(e.target.value)} />
+        <input
+          type="password"
+          autoComplete="off"
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellCheck={false}
+          placeholder="sk-ant-…"
+          value={keyDraft}
+          onChange={(e) => {
+            setKeyDraft(e.target.value)
+            setKeyNote(null)
+          }}
+        />
+        <div className={`note${savedKey ? '' : ' warn'}`}>{savedKey ? `Сохранён ключ …${savedKey.slice(-4)}` : 'Ключ не сохранён'}</div>
         <button
-          className="btn"
+          className="btn primary"
           onClick={() => {
-            update((d) => setSettings(d, { claudeKey: keyDraft.trim() }))
-            setMessage(keyDraft.trim() ? 'Ключ сохранён' : 'Ключ удалён')
+            const clean = keyDraft.replace(/\s+/g, '')
+            setKeyDraft(clean)
+            update((d) => setSettings(d, { claudeKey: clean }))
+            setKeyNote({ ok: true, text: clean ? 'Ключ сохранён на этом устройстве' : 'Ключ удалён' })
           }}
         >
           Сохранить ключ
         </button>
+        <button
+          className="btn"
+          disabled={keyBusy || !savedKey}
+          onClick={async () => {
+            setKeyBusy(true)
+            setKeyNote(null)
+            try {
+              await checkKey(savedKey)
+              setKeyNote({ ok: true, text: 'Claude принял ключ. Можно считать.' })
+            } catch (e) {
+              setKeyNote({ ok: false, text: e instanceof ClaudeError ? e.message : 'Не получилось проверить ключ.' })
+            } finally {
+              setKeyBusy(false)
+            }
+          }}
+        >
+          {keyBusy ? 'Проверяю…' : 'Проверить ключ'}
+        </button>
+        {keyNote ? (
+          <div className={`note${keyNote.ok ? '' : ' warn'}`} role="status">
+            {keyNote.text}
+          </div>
+        ) : null}
       </section>
 
       <section className="card stack">
