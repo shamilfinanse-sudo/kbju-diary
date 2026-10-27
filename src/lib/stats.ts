@@ -1,5 +1,6 @@
+import { monthKey, weekStart } from './dates'
 import { addTotals, sumEntries, sumWorkouts, ZERO } from './nutrition'
-import type { AppData, Targets, Totals } from './types'
+import type { AppData, FoodEntry, Targets, Totals, WorkoutEntry } from './types'
 
 export interface DaySummary {
   date: string
@@ -10,9 +11,7 @@ export interface DaySummary {
   hasSport: boolean
 }
 
-export function daySummary(d: Pick<AppData, 'entries' | 'workouts'>, date: string): DaySummary {
-  const foods = d.entries.filter((e) => e.date === date)
-  const ws = d.workouts.filter((w) => w.date === date)
+function summarize(date: string, foods: FoodEntry[], ws: WorkoutEntry[]): DaySummary {
   const sport = sumWorkouts(ws)
   return {
     date,
@@ -24,8 +23,68 @@ export function daySummary(d: Pick<AppData, 'entries' | 'workouts'>, date: strin
   }
 }
 
+export function daySummary(d: Pick<AppData, 'entries' | 'workouts'>, date: string): DaySummary {
+  return summarize(
+    date,
+    d.entries.filter((e) => e.date === date),
+    d.workouts.filter((w) => w.date === date),
+  )
+}
+
+function groupByDate<T extends { date: string }>(list: T[]): Map<string, T[]> {
+  const map = new Map<string, T[]>()
+  for (const item of list) map.set(item.date, [...(map.get(item.date) ?? []), item])
+  return map
+}
+
 export function rangeSummary(d: Pick<AppData, 'entries' | 'workouts'>, dates: string[]): DaySummary[] {
-  return dates.map((date) => daySummary(d, date))
+  const foods = groupByDate(d.entries)
+  const ws = groupByDate(d.workouts)
+  return dates.map((date) => summarize(date, foods.get(date) ?? [], ws.get(date) ?? []))
+}
+
+export type BucketSize = 'day' | 'week' | 'month'
+
+export interface Bucket {
+  key: string
+  start: string
+  end: string
+  logged: number
+  avg: Totals
+  sportKcal: number
+  sportMinutes: number
+}
+
+const DAY_BUCKET_MAX_DAYS = 31
+const WEEK_BUCKET_MAX_DAYS = 190
+
+export function bucketSizeFor(dayCount: number): BucketSize {
+  if (dayCount <= DAY_BUCKET_MAX_DAYS) return 'day'
+  return dayCount <= WEEK_BUCKET_MAX_DAYS ? 'week' : 'month'
+}
+
+/** Склеивает дни в недели или месяцы: еда считается средним за день с записями, спорт суммой. */
+export function bucketize(days: DaySummary[], size: BucketSize): Bucket[] {
+  const keyOf = (date: string) => (size === 'day' ? date : size === 'week' ? weekStart(date) : monthKey(date))
+  const groups = new Map<string, DaySummary[]>()
+  for (const day of days) {
+    const k = keyOf(day.date)
+    groups.set(k, [...(groups.get(k) ?? []), day])
+  }
+  return [...groups.entries()].map(([key, list]) => {
+    const logged = list.filter((x) => x.hasFood)
+    const sum = logged.reduce((a, x) => addTotals(a, x.totals), ZERO)
+    const n = logged.length || 1
+    return {
+      key,
+      start: list[0].date,
+      end: list[list.length - 1].date,
+      logged: logged.length,
+      avg: { kcal: sum.kcal / n, p: sum.p / n, f: sum.f / n, c: sum.c / n },
+      sportKcal: list.reduce((a, x) => a + x.sportKcal, 0),
+      sportMinutes: list.reduce((a, x) => a + x.sportMinutes, 0),
+    }
+  })
 }
 
 export interface PeriodStats {

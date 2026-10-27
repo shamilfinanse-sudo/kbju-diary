@@ -27,10 +27,10 @@ export function Ring({ value, max, size = 150, stroke = 14, children }: { value:
   )
 }
 
-export function MacroBar({ label, value, target, color }: { label: string; value: number; target: number; color: string }) {
+export function MacroBar({ label, value, target, color, onClick }: { label: string; value: number; target: number; color: string; onClick?: () => void }) {
   const pct = target > 0 ? Math.min((value / target) * 100, 100) : 0
   return (
-    <div className="macro">
+    <button className="macro" onClick={onClick} aria-label={`${label}: из чего сложилось`}>
       <div className="macro-top">
         <span>{label}</span>
         <b>
@@ -40,6 +40,6 @@ export function MacroBar({ label, value, target, color }: { label: string; value
       <div className="track">
         <div className="fill" style={{ width: `${pct}%`, background: color }} />
       </div>
-    </div>
+    </button>
   )
 }

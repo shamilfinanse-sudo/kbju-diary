@@ -1,5 +1,6 @@
 const MONTHS = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря']
 const MONTHS_NOM = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
+const MONTHS_SHORT = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек']
 const WEEKDAYS = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб']
 
 const pad = (n: number) => String(n).padStart(2, '0')
@@ -78,4 +79,22 @@ export function longDate(s: string): string {
 export function shortDate(s: string): string {
   const d = parseISO(s)
   return `${d.getDate()} ${MONTHS[d.getMonth()].slice(0, 3)}`
+}
+
+export function monthShort(key: string): string {
+  return MONTHS_SHORT[Number(key.slice(5, 7)) - 1]
+}
+
+export function daysBetween(from: string, to: string): number {
+  return Math.round((parseISO(to).getTime() - parseISO(from).getTime()) / 86400000)
+}
+
+export function dateRange(from: string, to: string): string[] {
+  const n = daysBetween(from, to)
+  return n < 0 ? [] : Array.from({ length: n + 1 }, (_, i) => addDays(from, i))
+}
+
+export function rangeTitle(from: string, to: string): string {
+  if (from.slice(0, 4) === to.slice(0, 4)) return `${shortDate(from)} – ${shortDate(to)}`
+  return `${shortDate(from)} ${from.slice(0, 4)} – ${shortDate(to)} ${to.slice(0, 4)}`
 }

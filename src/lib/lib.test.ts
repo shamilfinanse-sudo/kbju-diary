@@ -1,13 +1,13 @@
 import { describe, expect, test } from 'vitest'
 import { validateFoods } from './claude'
 import { addFood, createInitial, parseBackup, removeFood, saveProducts, updateFood } from './data'
-import { addDays, daysInMonth, weekStart } from './dates'
+import { addDays, dateRange, daysInMonth, rangeTitle, weekStart } from './dates'
 import { findFood } from './match'
 import { calcTargets } from './norms'
 import { scale, sumEntries } from './nutrition'
 import { parseChunk, resolveGrams, splitChunks } from './parse'
 import { localDrafts } from './resolve'
-import { dayTone, daySummary, periodStats, rangeSummary } from './stats'
+import { bucketize, bucketSizeFor, dayTone, daySummary, periodStats, rangeSummary } from './stats'
 import { parseWorkout, workoutKcal } from './workouts'
 import type { FoodEntry } from './types'
 
@@ -144,5 +144,32 @@ describe('dates, backup, claude validation', () => {
     const ok = { i: 0, name: 'Плов', grams: 300, kcal: 190, p: 8, f: 8, c: 21 }
     expect(validateFoods([ok, { ...ok, i: 1, kcal: 5000 }, { ...ok, i: 2, grams: -1 }, { i: 3 }])).toHaveLength(1)
     expect(validateFoods('nope')).toEqual([])
+  })
+})
+
+describe('periods', () => {
+  test('date range and title', () => {
+    expect(dateRange('2026-10-30', '2026-11-02')).toEqual(['2026-10-30', '2026-10-31', '2026-11-01', '2026-11-02'])
+    expect(dateRange('2026-11-02', '2026-10-30')).toEqual([])
+    expect(rangeTitle('2025-12-20', '2026-01-05')).toContain('2025')
+    expect(rangeTitle('2026-10-01', '2026-10-25')).not.toContain('2026')
+  })
+  test('bucket size depends on period length', () => {
+    expect(bucketSizeFor(7)).toBe('day')
+    expect(bucketSizeFor(31)).toBe('day')
+    expect(bucketSizeFor(90)).toBe('week')
+    expect(bucketSizeFor(365)).toBe('month')
+  })
+  test('buckets average food per logged day and sum sport', () => {
+    let d = createInitial()
+    d = addFood(d, [entry({ id: 'a', date: '2026-10-19' }), entry({ id: 'b', date: '2026-10-20', grams: 100 })])
+    d = { ...d, workouts: [{ id: 'w1', date: '2026-10-21', name: 'Бег', minutes: 30, kcal: 300 }, { id: 'w2', date: '2026-10-22', name: 'Бег', minutes: 20, kcal: 200 }] }
+    const days = rangeSummary(d, dateRange('2026-10-19', '2026-10-28'))
+    const weeks = bucketize(days, 'week')
+    expect(weeks).toHaveLength(2)
+    expect(weeks[0]).toMatchObject({ start: '2026-10-19', logged: 2, sportMinutes: 50, sportKcal: 500 })
+    expect(weeks[0].avg.kcal).toBe(165)
+    expect(weeks[1].logged).toBe(0)
+    expect(bucketize(days, 'month')).toHaveLength(1)
   })
 })

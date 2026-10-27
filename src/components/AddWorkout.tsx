@@ -67,7 +67,7 @@ export function AddWorkout({ date, onDone }: { date: string; onDone: () => void 
           </button>
         ))}
       </div>
-      <textarea rows={2} value={text} placeholder="Например: бег 40 минут, или силовая 1 час" onChange={(e) => setText(e.target.value)} autoFocus />
+      <textarea rows={2} value={text} placeholder="Например: бег 40 минут, или силовая 1 час" onChange={(e) => setText(e.target.value)} />
       <button className="btn primary" disabled={busy || !text.trim()} onClick={calculate}>
         {busy ? 'Считаю…' : 'Посчитать калории'}
       </button>

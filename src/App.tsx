@@ -58,7 +58,18 @@ export function App() {
         </button>
       </nav>
 
-      {add ? <AddSheet date={date} meal={add.meal} initialTab={add.tab} onClose={() => setAdd(null)} /> : null}
+      {add ? (
+        <AddSheet
+          date={date}
+          meal={add.meal}
+          initialTab={add.tab}
+          onClose={() => setAdd(null)}
+          onSaved={(d) => {
+            setDate(d)
+            setAdd(null)
+          }}
+        />
+      ) : null}
     </div>
   )
 }

@@ -94,7 +94,6 @@ export function AddFood({ date, meal: initialMeal, onDone }: { date: string; mea
         value={text}
         placeholder="Например: гречка 150 г, куриная грудка 200 г, яблоко 1 шт"
         onChange={(e) => setText(e.target.value)}
-        autoFocus
       />
       {recent.length > 0 && !drafts ? (
         <div>

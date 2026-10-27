@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Breakdown, type Metric } from '../components/Breakdown'
 import { EditEntry } from '../components/EditEntry'
 import { IconBolt, IconFlame, IconLeft, IconRight, IconTrash } from '../components/Icons'
 import { MacroBar, Ring } from '../components/Ring'
@@ -22,6 +23,7 @@ interface Props {
 export function Diary({ date, setDate, openAdd, goProfile }: Props) {
   const { data, update } = useStore()
   const [editing, setEditing] = useState<FoodEntry | null>(null)
+  const [metric, setMetric] = useState<Metric | null>(null)
   const targets = data.targets ?? FALLBACK_TARGETS
   const day = useMemo(() => daySummary(data, date), [data, date])
   const left = targets.kcal + day.sportKcal - day.totals.kcal
@@ -50,7 +52,7 @@ export function Diary({ date, setDate, openAdd, goProfile }: Props) {
         </button>
       ) : null}
 
-      <section className="card summary">
+      <section className="card summary tappable" role="button" tabIndex={0} onClick={() => setMetric('kcal')} onKeyDown={(e) => e.key === 'Enter' && setMetric('kcal')}>
         <Ring value={day.totals.kcal} max={targets.kcal + day.sportKcal}>
           <b className="ring-big">{fmt(Math.abs(left))}</b>
           <span className="ring-small">{left >= 0 ? 'осталось ккал' : 'сверх нормы'}</span>
@@ -74,9 +76,9 @@ export function Diary({ date, setDate, openAdd, goProfile }: Props) {
       </section>
 
       <section className="card macros">
-        <MacroBar label="Белки" value={day.totals.p} target={targets.p} color="var(--c-p)" />
-        <MacroBar label="Жиры" value={day.totals.f} target={targets.f} color="var(--c-f)" />
-        <MacroBar label="Углеводы" value={day.totals.c} target={targets.c} color="var(--c-c)" />
+        <MacroBar label="Белки" value={day.totals.p} target={targets.p} color="var(--c-p)" onClick={() => setMetric('p')} />
+        <MacroBar label="Жиры" value={day.totals.f} target={targets.f} color="var(--c-f)" onClick={() => setMetric('f')} />
+        <MacroBar label="Углеводы" value={day.totals.c} target={targets.c} color="var(--c-c)" onClick={() => setMetric('c')} />
       </section>
 
       {MEALS.map((m) => {
@@ -134,6 +136,7 @@ export function Diary({ date, setDate, openAdd, goProfile }: Props) {
         </button>
       </section>
 
+      {metric ? <Breakdown metric={metric} entries={foods} target={targets[metric]} sportKcal={day.sportKcal} onClose={() => setMetric(null)} /> : null}
       {editing ? <EditEntry entry={editing} onClose={() => setEditing(null)} /> : null}
     </div>
   )
