@@ -71,3 +71,40 @@ export function goalStats(days: DaySummary[], targets: Targets, today: string): 
   }
   return { days: counted, hit, full, currentStreak: run, bestStreak: best }
 }
+
+export interface PlanLine {
+  metric: GoalMetric
+  consumed: number
+  plan: number
+  /** Доля выполнения плана периода (1 = 100%). */
+  ratio: number
+  /** Сколько осталось до плана; отрицательное число — уже перебор. */
+  remaining: number
+  /** Оценка выставляется только за закончившийся период. */
+  status: GoalStatus | null
+}
+
+export interface PeriodPlan {
+  days: number
+  finished: boolean
+  lines: PlanLine[]
+  sportKcal: number
+}
+
+/** План периода = дневная норма × число дней периода; съедено = сумма по всем дням периода. */
+export function periodPlan(days: DaySummary[], targets: Targets, today: string): PeriodPlan {
+  const finished = days.length > 0 && days[days.length - 1].date < today
+  const lines = GOAL_METRICS.map((metric): PlanLine => {
+    const consumed = days.reduce((a, d) => a + d.totals[metric], 0)
+    const plan = targets[metric] * days.length
+    return {
+      metric,
+      consumed,
+      plan,
+      ratio: plan > 0 ? consumed / plan : 0,
+      remaining: plan - consumed,
+      status: finished ? metricStatus(metric, consumed, plan) : null,
+    }
+  })
+  return { days: days.length, finished, lines, sportKcal: days.reduce((a, d) => a + d.sportKcal, 0) }
+}

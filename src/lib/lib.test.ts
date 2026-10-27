@@ -3,7 +3,7 @@ import { validateFoods } from './claude'
 import { addFood, createInitial, parseBackup, removeFood, saveProducts, updateFood } from './data'
 import { addDays, dateRange, daysInMonth, rangeTitle, weekStart } from './dates'
 import { findFood } from './match'
-import { dayGoals, goalStats, metricStatus } from './goals'
+import { dayGoals, goalStats, metricStatus, periodPlan } from './goals'
 import { calcTargets } from './norms'
 import { scale, sumEntries } from './nutrition'
 import { parseChunk, resolveGrams, splitChunks } from './parse'
@@ -201,5 +201,30 @@ describe('goals', () => {
     expect(g.bestStreak).toBe(3)
     expect(g.currentStreak).toBe(0)
     expect(goalStats(days.slice(0, 2), targets, '2026-10-27')).toMatchObject({ full: 2, currentStreak: 2, bestStreak: 2 })
+  })
+})
+
+describe('period plan', () => {
+  const targets = { kcal: 2000, p: 100, f: 70, c: 250 }
+  const day = (date: string, kcal: number, p: number) => ({
+    date, totals: { kcal, p, f: 70, c: 250 }, sportKcal: 100, sportMinutes: 30, hasFood: kcal > 0, hasSport: true,
+  })
+  test('week plan is the daily norm times seven, consumed is the sum', () => {
+    const week = ['20', '21', '22', '23', '24', '25', '26'].map((d, i) => day(`2026-10-${d}`, i < 3 ? 2000 : 0, i < 3 ? 100 : 0))
+    const plan = periodPlan(week, targets, '2026-10-22')
+    expect(plan.days).toBe(7)
+    const kcal = plan.lines[0]
+    expect(kcal).toMatchObject({ metric: 'kcal', consumed: 6000, plan: 14000, remaining: 8000, status: null })
+    expect(kcal.ratio).toBeCloseTo(6000 / 14000)
+    expect(plan.finished).toBe(false)
+    expect(plan.sportKcal).toBe(700)
+  })
+  test('finished period gets a status, protein has no upper bound', () => {
+    const days = [day('2026-10-01', 2000, 300), day('2026-10-02', 2000, 300)]
+    const plan = periodPlan(days, targets, '2026-10-10')
+    expect(plan.finished).toBe(true)
+    expect(plan.lines.map((l) => l.status)).toEqual(['hit', 'hit', 'hit', 'hit'])
+    expect(periodPlan([day('2026-10-01', 500, 10)], targets, '2026-10-10').lines[0].status).toBe('low')
+    expect(periodPlan([], targets, '2026-10-10').lines[0]).toMatchObject({ plan: 0, ratio: 0 })
   })
 })

@@ -18,8 +18,8 @@ import {
   weekDays,
   weekdayShort,
 } from '../lib/dates'
-import { fmt, fmt1, minutesText } from '../lib/format'
-import { GOAL_METRICS, GOAL_RULES, goalStats } from '../lib/goals'
+import { daysWord, fmt, fmt1, minutesText } from '../lib/format'
+import { GOAL_METRICS, GOAL_RULES, goalStats, periodPlan, type GoalMetric, type GoalStatus } from '../lib/goals'
 import { FALLBACK_TARGETS } from '../lib/norms'
 import { bucketize, bucketSizeFor, dayTone, periodStats, rangeSummary, type Bucket, type BucketSize } from '../lib/stats'
 import { useStore } from '../store'
@@ -34,6 +34,17 @@ const MODES: Array<{ id: Mode; label: string; len?: number }> = [
   { id: 'year', label: 'Год', len: 365 },
   { id: 'custom', label: 'Свой период' },
 ]
+
+const PLAN_TITLE: Record<Mode, string> = {
+  week: 'План на неделю',
+  month: 'План на месяц',
+  quarter: 'План на 3 месяца',
+  half: 'План на полгода',
+  year: 'План на год',
+  custom: 'План на период',
+}
+const UNIT: Record<GoalMetric, string> = { kcal: 'ккал', p: 'г', f: 'г', c: 'г' }
+const STATUS_TEXT: Record<GoalStatus, string> = { low: 'не добрано', hit: 'в норме', high: 'выше нормы' }
 
 const KCAL_PER_G = { p: 4, f: 9, c: 4 }
 const MAX_CUSTOM_DAYS = 400
@@ -73,6 +84,7 @@ export function Dynamics({ openDay }: { openDay: (date: string) => void }) {
     return periodStats(days, targets, data.workouts.filter((w) => set.has(w.date)).length)
   }, [days, dates, targets, data.workouts])
 
+  const plan = useMemo(() => periodPlan(days, targets, today), [days, targets, today])
   const goals = useMemo(() => goalStats(days, targets, today), [days, targets, today])
   const pct = (n: number) => (goals.days ? Math.round((n / goals.days) * 100) : 0)
 
@@ -166,6 +178,35 @@ export function Dynamics({ openDay }: { openDay: (date: string) => void }) {
         </div>
       )}
 
+      <section className="card stack">
+        <h3>{PLAN_TITLE[mode]}</h3>
+        <div className="hint">
+          Норма на день × {plan.days} {daysWord(plan.days)}. {plan.finished ? 'Период закончился.' : 'Период ещё идёт, сегодняшний день учтён по тому, что уже записано.'}
+        </div>
+        <div className="goal-list">
+          {plan.lines.map((l) => (
+            <div key={l.metric} className="goal-row">
+              <div className="goal-top">
+                <span>{GOAL_RULES[l.metric].label}</span>
+                <b>
+                  {fmt(l.consumed)} из {fmt(l.plan)} {UNIT[l.metric]}
+                </b>
+              </div>
+              <div className="track thin">
+                <div className="fill" style={{ width: `${Math.min(l.ratio * 100, 100)}%`, background: l.metric === 'kcal' ? 'var(--accent)' : `var(--c-${l.metric})` }} />
+              </div>
+              <div className="goal-sub">
+                <small>
+                  {Math.round(l.ratio * 100)}% плана · {l.remaining >= 0 ? `осталось ${fmt(l.remaining)}` : `выше плана на ${fmt(-l.remaining)}`} {UNIT[l.metric]}
+                </small>
+                {l.status ? <em className={`goal ${l.status}`}>{l.status === 'hit' ? '✓ ' : ''}{STATUS_TEXT[l.status]}</em> : null}
+              </div>
+            </div>
+          ))}
+        </div>
+        {plan.sportKcal ? <div className="hint">Спорт за период: {fmt(plan.sportKcal)} ккал, на столько можно съесть больше плана.</div> : null}
+      </section>
+
       <div className="stats">
         <div className="card stat">
           <span>В среднем в день</span>
@@ -198,7 +239,7 @@ export function Dynamics({ openDay }: { openDay: (date: string) => void }) {
       </div>
 
       <section className="card stack">
-        <h3>Выполнение плана</h3>
+        <h3>Выполнение плана по дням</h3>
         {goals.days === 0 ? (
           <div className="empty">Нет завершённых дней с записями. Сегодняшний день не считается, пока он не закончился.</div>
         ) : (
