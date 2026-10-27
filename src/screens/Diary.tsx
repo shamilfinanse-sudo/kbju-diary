@@ -9,6 +9,7 @@ import { fmt, minutesText } from '../lib/format'
 import { MEALS } from '../lib/meals'
 import { entryTotals } from '../lib/nutrition'
 import { FALLBACK_TARGETS } from '../lib/norms'
+import { dayGoals } from '../lib/goals'
 import { daySummary } from '../lib/stats'
 import { useStore } from '../store'
 import type { FoodEntry, MealId } from '../lib/types'
@@ -26,6 +27,7 @@ export function Diary({ date, setDate, openAdd, goProfile }: Props) {
   const [metric, setMetric] = useState<Metric | null>(null)
   const targets = data.targets ?? FALLBACK_TARGETS
   const day = useMemo(() => daySummary(data, date), [data, date])
+  const goals = dayGoals(day, targets)
   const left = targets.kcal + day.sportKcal - day.totals.kcal
   const foods = data.entries.filter((e) => e.date === date)
   const workouts = data.workouts.filter((w) => w.date === date)
@@ -76,9 +78,9 @@ export function Diary({ date, setDate, openAdd, goProfile }: Props) {
       </section>
 
       <section className="card macros">
-        <MacroBar label="Белки" value={day.totals.p} target={targets.p} color="var(--c-p)" onClick={() => setMetric('p')} />
-        <MacroBar label="Жиры" value={day.totals.f} target={targets.f} color="var(--c-f)" onClick={() => setMetric('f')} />
-        <MacroBar label="Углеводы" value={day.totals.c} target={targets.c} color="var(--c-c)" onClick={() => setMetric('c')} />
+        <MacroBar label="Белки" value={day.totals.p} target={targets.p} color="var(--c-p)" status={day.hasFood ? goals.p : undefined} onClick={() => setMetric('p')} />
+        <MacroBar label="Жиры" value={day.totals.f} target={targets.f} color="var(--c-f)" status={day.hasFood ? goals.f : undefined} onClick={() => setMetric('f')} />
+        <MacroBar label="Углеводы" value={day.totals.c} target={targets.c} color="var(--c-c)" status={day.hasFood ? goals.c : undefined} onClick={() => setMetric('c')} />
       </section>
 
       {MEALS.map((m) => {

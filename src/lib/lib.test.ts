@@ -3,6 +3,7 @@ import { validateFoods } from './claude'
 import { addFood, createInitial, parseBackup, removeFood, saveProducts, updateFood } from './data'
 import { addDays, dateRange, daysInMonth, rangeTitle, weekStart } from './dates'
 import { findFood } from './match'
+import { dayGoals, goalStats, metricStatus } from './goals'
 import { calcTargets } from './norms'
 import { scale, sumEntries } from './nutrition'
 import { parseChunk, resolveGrams, splitChunks } from './parse'
@@ -171,5 +172,34 @@ describe('periods', () => {
     expect(weeks[0].avg.kcal).toBe(165)
     expect(weeks[1].logged).toBe(0)
     expect(bucketize(days, 'month')).toHaveLength(1)
+  })
+})
+
+describe('goals', () => {
+  const targets = { kcal: 2000, p: 100, f: 70, c: 250 }
+  const day = (date: string, kcal: number, p: number, f: number, c: number, hasFood = true) => ({
+    date, totals: { kcal, p, f, c }, sportKcal: 0, sportMinutes: 0, hasFood, hasSport: false,
+  })
+  test('status uses the 90–110% corridor, protein has no upper bound', () => {
+    expect(metricStatus('kcal', 1700, 2000)).toBe('low')
+    expect(metricStatus('kcal', 1800, 2000)).toBe('hit')
+    expect(metricStatus('kcal', 2200, 2000)).toBe('hit')
+    expect(metricStatus('kcal', 2300, 2000)).toBe('high')
+    expect(metricStatus('p', 300, 100)).toBe('hit')
+    expect(metricStatus('p', 80, 100)).toBe('low')
+  })
+  test('dayGoals reports each metric', () => {
+    expect(dayGoals(day('2026-10-20', 2000, 50, 70, 300), targets)).toEqual({ kcal: 'hit', p: 'low', f: 'hit', c: 'high' })
+  })
+  test('stats skip today and days without food, and count streaks', () => {
+    const ok = (d: string) => day(d, 2000, 100, 70, 250)
+    const days = [ok('2026-10-20'), ok('2026-10-21'), day('2026-10-22', 1000, 40, 30, 100), ok('2026-10-23'), ok('2026-10-24'), ok('2026-10-25'), day('2026-10-26', 0, 0, 0, 0, false), ok('2026-10-27')]
+    const g = goalStats(days, targets, '2026-10-27')
+    expect(g.days).toBe(6)
+    expect(g.full).toBe(5)
+    expect(g.hit.kcal).toBe(5)
+    expect(g.bestStreak).toBe(3)
+    expect(g.currentStreak).toBe(0)
+    expect(goalStats(days.slice(0, 2), targets, '2026-10-27')).toMatchObject({ full: 2, currentStreak: 2, bestStreak: 2 })
   })
 })

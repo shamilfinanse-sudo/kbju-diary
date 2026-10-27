@@ -371,6 +371,8 @@ small {
 }
 input,
 textarea {
+  min-width: 0;
+  max-width: 100%;
   width: 100%;
   border: 0;
   border-radius: 14px;
@@ -427,13 +429,13 @@ textarea {
   gap: 10px;
 }
 .grid2 {
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .grid3 {
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 .grid4 {
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 .seg {
   display: flex;
@@ -736,11 +738,13 @@ textarea {
 /* профиль */
 .themes {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   margin-top: 12px;
 }
 .theme-card {
+  min-width: 0;
+  overflow-wrap: anywhere;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -757,6 +761,7 @@ textarea {
 }
 .swatches {
   display: flex;
+  padding-right: 6px;
 }
 .swatches i {
   width: 22px;
@@ -858,4 +863,67 @@ body::before {
 }
 .track.thin {
   height: 6px;
+}
+
+/* iPhone рисует поле даты шире рамки: возвращаем ему обычные размеры */
+input[type='date'] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  height: 48px;
+  text-align: left;
+  line-height: 1.2;
+}
+input[type='date']::-webkit-date-and-time-value {
+  text-align: left;
+  min-width: 0;
+}
+input[type='date']::-webkit-calendar-picker-indicator {
+  margin: 0;
+}
+.chip.datechip input[type='date'] {
+  height: 100%;
+}
+
+em.goal {
+  font-style: normal;
+  font-size: 12px;
+  margin-left: 8px;
+  color: var(--good);
+}
+em.goal.high {
+  color: var(--warn);
+}
+.goal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.goal-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 5px;
+  font-size: 15px;
+}
+.goal-top b {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.goal-full {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.goal-full > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+.goal-full span {
+  font-size: 12px;
+  color: var(--muted);
 }

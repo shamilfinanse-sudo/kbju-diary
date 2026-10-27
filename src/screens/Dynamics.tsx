@@ -19,6 +19,7 @@ import {
   weekdayShort,
 } from '../lib/dates'
 import { fmt, fmt1, minutesText } from '../lib/format'
+import { GOAL_METRICS, GOAL_RULES, goalStats } from '../lib/goals'
 import { FALLBACK_TARGETS } from '../lib/norms'
 import { bucketize, bucketSizeFor, dayTone, periodStats, rangeSummary, type Bucket, type BucketSize } from '../lib/stats'
 import { useStore } from '../store'
@@ -71,6 +72,9 @@ export function Dynamics({ openDay }: { openDay: (date: string) => void }) {
     const set = new Set(dates)
     return periodStats(days, targets, data.workouts.filter((w) => set.has(w.date)).length)
   }, [days, dates, targets, data.workouts])
+
+  const goals = useMemo(() => goalStats(days, targets, today), [days, targets, today])
+  const pct = (n: number) => (goals.days ? Math.round((n / goals.days) * 100) : 0)
 
   const labelEvery = Math.max(1, Math.ceil(buckets.length / TARGET_LABELS))
   const aggregated = size !== 'day'
@@ -192,6 +196,47 @@ export function Dynamics({ openDay }: { openDay: (date: string) => void }) {
           </small>
         </div>
       </div>
+
+      <section className="card stack">
+        <h3>Выполнение плана</h3>
+        {goals.days === 0 ? (
+          <div className="empty">Нет завершённых дней с записями. Сегодняшний день не считается, пока он не закончился.</div>
+        ) : (
+          <>
+            <div className="goal-list">
+              {GOAL_METRICS.map((m) => (
+                <div key={m} className="goal-row">
+                  <div className="goal-top">
+                    <span>{GOAL_RULES[m].label}</span>
+                    <b>
+                      {goals.hit[m]} из {goals.days} · {pct(goals.hit[m])}%
+                    </b>
+                  </div>
+                  <div className="track thin">
+                    <div className="fill" style={{ width: `${pct(goals.hit[m])}%`, background: m === 'kcal' ? 'var(--accent)' : `var(--c-${m})` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="goal-full">
+              <div>
+                <span>Весь план за день</span>
+                <b>
+                  {goals.full} из {goals.days}
+                </b>
+              </div>
+              <div>
+                <span>Серия подряд</span>
+                <b>сейчас {goals.currentStreak}, лучшая {goals.bestStreak}</b>
+              </div>
+            </div>
+            <div className="hint">
+              День засчитан, если показатель не ниже 90% нормы. Калории, жиры и углеводы не должны быть выше 110%, у белка верхней границы нет. «Весь план» — когда выполнены все четыре
+              показателя.
+            </div>
+          </>
+        )}
+      </section>
 
       {mode === 'month' ? (
         <section className="card">

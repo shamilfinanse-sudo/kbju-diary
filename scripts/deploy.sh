@@ -3,7 +3,8 @@
 set -e
 cd "$(dirname "$0")/.."
 npm test
-npm run build
+# сборка и проверка вёрстки на телефонных размерах; при замечаниях выкладка останавливается
+npm run check:layout
 TMP=$(mktemp -d)
 cp -r dist/. "$TMP"
 touch "$TMP/.nojekyll"

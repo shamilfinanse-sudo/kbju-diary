@@ -1,4 +1,7 @@
 import type { ReactNode } from 'react'
+import type { GoalStatus } from '../lib/goals'
+
+const STATUS_TEXT: Record<GoalStatus, string> = { low: '', hit: 'в норме', high: 'выше нормы' }
 
 export function Ring({ value, max, size = 150, stroke = 14, children }: { value: number; max: number; size?: number; stroke?: number; children: ReactNode }) {
   const r = (size - stroke) / 2
@@ -27,12 +30,15 @@ export function Ring({ value, max, size = 150, stroke = 14, children }: { value:
   )
 }
 
-export function MacroBar({ label, value, target, color, onClick }: { label: string; value: number; target: number; color: string; onClick?: () => void }) {
+export function MacroBar({ label, value, target, color, status, onClick }: { label: string; value: number; target: number; color: string; status?: GoalStatus; onClick?: () => void }) {
   const pct = target > 0 ? Math.min((value / target) * 100, 100) : 0
   return (
     <button className="macro" onClick={onClick} aria-label={`${label}: из чего сложилось`}>
       <div className="macro-top">
-        <span>{label}</span>
+        <span>
+          {label}
+          {status && STATUS_TEXT[status] ? <em className={`goal ${status}`}>{status === 'hit' ? '✓ ' : ''}{STATUS_TEXT[status]}</em> : null}
+        </span>
         <b>
           {Math.round(value)} <small>/ {Math.round(target)} г</small>
         </b>
